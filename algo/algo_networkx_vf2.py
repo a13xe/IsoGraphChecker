@@ -1,7 +1,7 @@
+import json
 import networkx as nx
 from networkx.algorithms import isomorphism
-import json
-import time
+from timeit import default_timer as timer
 
 def load_graph_from_json(file_path):
     with open(file_path, 'r') as file:
@@ -20,9 +20,9 @@ if __name__ == "__main__":
     G1 = load_graph_from_json('graph/rand_graph_100000.json')
     G2 = load_graph_from_json('graph/rand_graph_100000.json')
     
-    start_time = time.time()
+    start_time = timer()
     isomorphic = isomorphism.GraphMatcher(G1, G2)
-    end_time = time.time()
+    end_time = timer()
     
     elapsed_time = end_time - start_time
     

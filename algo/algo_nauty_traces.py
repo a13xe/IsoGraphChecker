@@ -1,5 +1,5 @@
-import time
 import json
+from timeit import default_timer as timer
 
 class Graph:
     def __init__(self, edges, labels=None):
@@ -95,9 +95,9 @@ if __name__ == "__main__":
     G1 = load_graph_from_json('graph/rand_graph_100000.json')
     G2 = load_graph_from_json('graph/rand_graph_100000.json')
     
-    start_time = time.time()
+    start_time = timer()
     isomorphic = nauty_traces_isomorphism(G1, G2)
-    end_time = time.time()
+    end_time = timer()
     
     elapsed_time = end_time - start_time
     
