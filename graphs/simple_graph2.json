@@ -1,0 +1,30 @@
+{
+    "nodes": [
+        {
+            "id": 1,
+            "label": "X"
+        },
+        {
+            "id": 2,
+            "label": "Y"
+        },
+        {
+            "id": 3,
+            "label": "Z"
+        }
+    ],
+    "edges": [
+        {
+            "source": 1,
+            "target": 2
+        },
+        {
+            "source": 2,
+            "target": 3
+        },
+        {
+            "source": 3,
+            "target": 1
+        }
+    ]
+}
