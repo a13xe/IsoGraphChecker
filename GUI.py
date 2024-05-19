@@ -1,16 +1,15 @@
 import json
-import time
 import tkinter as tk
 import networkx as nx
 import customtkinter as ctk
 import matplotlib.pyplot as plt
-from tkinter import filedialog, messagebox
-from networkx.algorithms import isomorphism
+from timeit import default_timer as timer
+from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Local imports
-from algo.algo_nauty_traces import nauty_traces_isomorphism, load_graph_from_json as load_graph_from_json_nauty, Graph as NautyGraph
-from algo.algo_weisfeiler_lehman import weisfeiler_lehman_isomorphism, load_graph_from_json as load_graph_from_json_wl
-from algo.algo_laszlo_babai_simplified import babai_graph_isomorphism, load_graph_from_json as load_graph_from_json_babai, Graph as BabaiGraph
+from algo.algo_nauty_traces import nauty_traces_isomorphism, Graph as NautyGraph
+from algo.algo_weisfeiler_lehman import weisfeiler_lehman_isomorphism
+from algo.algo_laszlo_babai_simplified import babai_graph_isomorphism, Graph as BabaiGraph
 
 # High DPI settings fix
 try:
@@ -21,8 +20,8 @@ except:
 
 class LogColors:
     SUCCESS = "#28a745"
-    WARNING = "#ffc107"
-    ERROR = "#dc3545"
+    MESSAGE = "#ffc107"
+    FAILURE = "#dc3545"
     TEXT = "#ffffff"
     INFO = "#0a9bff"
     
@@ -51,7 +50,7 @@ class GraphDisplay:
 class GraphIsomorphismCheckerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Graph Isomorphism Checker")
+        self.title("IsoGraphChecker")
         self.geometry("1430x590")
         self.resizable(False, False)
 
@@ -111,9 +110,9 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
 
         # Configure log text tags for colors
         self.log_widget.tag_config("SUCCESS", foreground=LogColors.SUCCESS) 
-        self.log_widget.tag_config("ERROR", foreground=LogColors.ERROR)
+        self.log_widget.tag_config("FAILURE", foreground=LogColors.FAILURE)
         self.log_widget.tag_config("TEXT", foreground=LogColors.TEXT)
-        self.log_widget.tag_config("WARNING", foreground=LogColors.WARNING)
+        self.log_widget.tag_config("MESSAGE", foreground=LogColors.MESSAGE)
         self.log_widget.tag_config("INFO", foreground=LogColors.INFO)
         self.log("Данная программа предназначена для проверки графов на изоморфность", "INFO")
         self.log("Для начала работы сперва загрузите два графа с помощью кнопок выше.", "TEXT")
@@ -127,9 +126,9 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
                 data = json.load(f)
                 self.graph1 = self.create_graph(data)
                 GraphDisplay.display_graph(self, self.graph1, self.frame_graph1)
-            self.log(f"Граф 1 загружен из файла {file_path}", "SUCCESS")
+            self.log(f"Граф 1 загружен из файла {file_path}", "MESSAGE")
         else:
-            self.log("Загрузка графа 1 отменена.", "WARNING")
+            self.log("Загрузка графа 1 отменена.", "MESSAGE")
 
     def load_graph2(self):
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
@@ -138,9 +137,9 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
                 data = json.load(f)
                 self.graph2 = self.create_graph(data)
                 GraphDisplay.display_graph(self, self.graph2, self.frame_graph2)
-            self.log(f"Граф 2 загружен из файла {file_path}", "SUCCESS")
+            self.log(f"Граф 2 загружен из файла {file_path}", "MESSAGE")
         else:
-            self.log("Загрузка графа 2 отменена.", "WARNING")
+            self.log("Загрузка графа 2 отменена.", "MESSAGE")
 
     def create_graph(self, data):
         graph = nx.Graph()
@@ -153,34 +152,29 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
     def check_isomorphism(self):
         self.log("Проверка на изоморфизм...", "TEXT")
         if self.graph1 is None or self.graph2 is None:
-            self.log("Оба графа должны быть сперва загружены!", "ERROR")
+            self.log("Оба графа должны быть сперва загружены!", "FAILURE")
             return
         
         algorithm = self.combobox_1.get()
         self.log(f"Выбранный алгоритм: {algorithm}", "INFO")
-        if algorithm == "NetworkX":
-            start_time = time.time()
-            GM = isomorphism.GraphMatcher(self.graph1, self.graph2)
-            is_isomorphic = GM.is_isomorphic()
-            end_time = time.time()
-        elif algorithm == "Laszlo-Babai (simplified)":
-            start_time = time.time()
+        if algorithm == "Laszlo-Babai (simplified)":
+            start_time = timer()
             G1 = self.convert_to_custom_graph(self.graph1, 'babai')
             G2 = self.convert_to_custom_graph(self.graph2, 'babai')
             is_isomorphic = babai_graph_isomorphism(G1, G2)
-            end_time = time.time()
+            end_time = timer()
         elif algorithm == "Nauty-Traces":
-            start_time = time.time()
+            start_time = timer()
             G1 = self.convert_to_custom_graph(self.graph1, 'nauty', with_labels=True)
             G2 = self.convert_to_custom_graph(self.graph2, 'nauty', with_labels=True)
             is_isomorphic = nauty_traces_isomorphism(G1, G2)
-            end_time = time.time()
+            end_time = timer()
         elif algorithm == "Weisfeiler-Lehman":
-            start_time = time.time()
+            start_time = timer()
             is_isomorphic = weisfeiler_lehman_isomorphism(self.graph1, self.graph2)
-            end_time = time.time()
+            end_time = timer()
         else:
-            self.log("Пожалуйста, выберите алгоритм из выпадающего списка!", "WARNING")
+            self.log("Пожалуйста, выберите алгоритм из выпадающего списка!", "MESSAGE")
             return
 
         elapsed_time = end_time - start_time
@@ -189,7 +183,7 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         if is_isomorphic:
             self.log("Графы изоморфны!", "SUCCESS")
         else:
-            self.log("Графы не изоморфны!", "ERROR")
+            self.log("Графы не изоморфны!", "FAILURE")
 
     def convert_to_custom_graph(self, nx_graph, algo_type, with_labels=False):
         edges = [(u, v) for u, v in nx_graph.edges()]
