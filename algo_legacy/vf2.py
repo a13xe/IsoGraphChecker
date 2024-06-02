@@ -19,6 +19,8 @@ def load_graph_from_json(file_path):
 if __name__ == "__main__":
     G1 = load_graph_from_json('graph/rand_graph_100000.json')
     G2 = load_graph_from_json('graph/rand_graph_100000.json')
+        
+    print("Running VF2 algo...")
     
     start_time = timer()
     isomorphic = isomorphism.GraphMatcher(G1, G2)

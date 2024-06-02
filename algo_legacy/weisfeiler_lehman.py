@@ -37,6 +37,8 @@ def weisfeiler_lehman_isomorphism(G1, G2, iterations=3):
 if __name__ == "__main__":
     G1 = load_graph_from_json('graph/rand_graph_100000.json')
     G2 = load_graph_from_json('graph/rand_graph_100000.json')
+        
+    print("Running Weisfeiler-Lehman algo...")
     
     start_time = timer()
     isomorphic = weisfeiler_lehman_isomorphism(G1, G2)

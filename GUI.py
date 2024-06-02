@@ -8,9 +8,10 @@ from tkinter import filedialog
 from networkx.algorithms import isomorphism
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Local imports
-from algo.algo_nauty_traces import nauty_traces_isomorphism, Graph as NautyGraph
-from algo.algo_weisfeiler_lehman import weisfeiler_lehman_isomorphism
-from algo.algo_laszlo_babai_simplified import babai_graph_isomorphism, Graph as BabaiGraph
+# from algo.color_refinement import color_refinement_isomorphism
+# from algo.weisfeiler_lehman import weisfeiler_lehman_isomorphism
+
+ctk.set_appearance_mode("Light")
 
 # High DPI settings fix
 try:
@@ -23,7 +24,7 @@ class LogColors:
     SUCCESS = "#28a745"
     MESSAGE = "#ffc107"
     FAILURE = "#dc3545"
-    TEXT = "#ffffff"
+    TEXT = "#000000"
     INFO = "#0a9bff"
     
 class GraphDisplay:
@@ -91,11 +92,11 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         self.button_load1.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.button_load2 = ctk.CTkButton(self.frame_controls, width=controls_width, text="Загрузить 2 схему (JSON)", command=self.load_graph2)
         self.button_load2.grid(row=1, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
-        self.combobox_1 = ctk.CTkComboBox(self.frame_controls, width=controls_width, values=["NetworkX", "Nauty-Traces", "Weisfeiler-Lehman", "Laszlo-Babai (simplified)"])
-        self.combobox_1.grid(row=2, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
+        # self.combobox_1 = ctk.CTkComboBox(self.frame_controls, width=controls_width, values=["VF2", "Color Refinement", "Weisfeiler-Lehman"])
+        # self.combobox_1.grid(row=2, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
         self.button_check = ctk.CTkButton(self.frame_controls, width=controls_width, text="Проверить на изоморфизм", command=self.check_isomorphism, fg_color="green")
         self.button_check.grid(row=3, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
-        self.log_widget = ctk.CTkTextbox(self.frame_controls, width=controls_width, wrap="word", state='disabled', height=log_height)
+        self.log_widget = ctk.CTkTextbox(self.frame_controls, width=controls_width, wrap="word", state='disabled', height=log_height + 40) # remove `+ 40` if you are using `combobox_1`
         self.log_widget.grid(row=4, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
         self.log_widget.grid_propagate(False)
         self.button_clear_log = ctk.CTkButton(self.frame_controls, width=controls_width, text="Очистить лог", command=self.clear_log)
@@ -156,31 +157,27 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
             self.log("Оба графа должны быть сперва загружены!", "FAILURE")
             return
         
-        algorithm = self.combobox_1.get()
-        self.log(f"Выбранный алгоритм: {algorithm}", "INFO")
-        if algorithm == "NetworkX":
-            start_time = timer()
-            is_isomorphic = isomorphism.GraphMatcher(self.graph1, self.graph2)
-            end_time = timer()
-        elif algorithm == "Laszlo-Babai (simplified)":
-            start_time = timer()
-            G1 = self.convert_to_custom_graph(self.graph1, 'babai')
-            G2 = self.convert_to_custom_graph(self.graph2, 'babai')
-            is_isomorphic = babai_graph_isomorphism(G1, G2)
-            end_time = timer()
-        elif algorithm == "Nauty-Traces":
-            start_time = timer()
-            G1 = self.convert_to_custom_graph(self.graph1, 'nauty', with_labels=True)
-            G2 = self.convert_to_custom_graph(self.graph2, 'nauty', with_labels=True)
-            is_isomorphic = nauty_traces_isomorphism(G1, G2)
-            end_time = timer()
-        elif algorithm == "Weisfeiler-Lehman":
-            start_time = timer()
-            is_isomorphic = weisfeiler_lehman_isomorphism(self.graph1, self.graph2)
-            end_time = timer()
-        else:
-            self.log("Пожалуйста, выберите алгоритм из выпадающего списка!", "MESSAGE")
-            return
+        start_time = timer()
+        is_isomorphic = isomorphism.GraphMatcher(self.graph1, self.graph2)
+        end_time = timer()
+        
+        # algorithm = self.combobox_1.get()
+        # self.log(f"Выбранный алгоритм: {algorithm}", "INFO")
+        # if algorithm == "VF2":
+        #     start_time = timer()
+        #     is_isomorphic = isomorphism.GraphMatcher(self.graph1, self.graph2)
+        #     end_time = timer()
+        # elif algorithm == "Color Refinement":
+        #     start_time = timer()
+        #     is_isomorphic = color_refinement_isomorphism(self.graph1, self.graph2)
+        #     end_time = timer()
+        # elif algorithm == "Weisfeiler-Lehman":
+        #     start_time = timer()
+        #     is_isomorphic = weisfeiler_lehman_isomorphism(self.graph1, self.graph2)
+        #     end_time = timer()
+        # else:
+        #     self.log("Пожалуйста, выберите алгоритм из выпадающего списка!", "MESSAGE")
+        #     return
 
         elapsed_time = end_time - start_time
         self.log(f"Время выполнения: {elapsed_time:.6f} секунд", "INFO")
@@ -189,17 +186,6 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
             self.log("Графы изоморфны!", "SUCCESS")
         else:
             self.log("Графы не изоморфны!", "FAILURE")
-
-    def convert_to_custom_graph(self, nx_graph, algo_type, with_labels=False):
-        edges = [(u, v) for u, v in nx_graph.edges()]
-        if algo_type == 'babai':
-            return BabaiGraph(edges)
-        elif algo_type == 'nauty':
-            if with_labels:
-                labels = {node: nx_graph.nodes[node]['label'] for node in nx_graph.nodes()}
-                return NautyGraph(edges, labels)
-            return NautyGraph(edges)
-        return None
 
     def log(self, message, tag):
         self.log_widget.configure(state='normal')

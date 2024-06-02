@@ -1,7 +1,7 @@
 import json
 from timeit import default_timer as timer
 
-class Graph:
+class LazloBabaiGraph:
     def __init__(self, edges):
         self.edges = edges
         self.vertices = set()
@@ -63,16 +63,18 @@ def isomorphism_helper(G1, partitions1, G2, partitions2):
 
     return False
 
-def load_graph_from_json(file_path):
+def load_lazlo_babai_graph(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
     
     edges = [(edge['source'], edge['target']) for edge in data['edges']]
-    return Graph(edges)
+    return LazloBabaiGraph(edges)
 
 if __name__ == "__main__":
-    G1 = load_graph_from_json('graph/rand_graph_100000.json')
-    G2 = load_graph_from_json('graph/rand_graph_100000.json')
+    G1 = load_lazlo_babai_graph('graph/rand_graph_100000.json')
+    G2 = load_lazlo_babai_graph('graph/rand_graph_100000.json')
+        
+    print("Running Lazlo-Babai algo...")
     
     start_time = timer()
     isomorphic = babai_graph_isomorphism(G1, G2)

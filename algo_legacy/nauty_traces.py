@@ -94,6 +94,8 @@ def load_graph_from_json(file_path):
 if __name__ == "__main__":
     G1 = load_graph_from_json('graph/rand_graph_100000.json')
     G2 = load_graph_from_json('graph/rand_graph_100000.json')
+        
+    print("Running Nauty-Traces algo...")
     
     start_time = timer()
     isomorphic = nauty_traces_isomorphism(G1, G2)
