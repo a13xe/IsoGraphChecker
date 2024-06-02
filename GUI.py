@@ -5,6 +5,7 @@ import customtkinter as ctk
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 from tkinter import filedialog
+from networkx.algorithms import isomorphism
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Local imports
 from algo.algo_nauty_traces import nauty_traces_isomorphism, Graph as NautyGraph
@@ -45,7 +46,7 @@ class GraphDisplay:
             nx.draw(graph, pos, with_labels=True, labels=nx.get_node_attributes(graph, 'label'), ax=ax)
             canvas = FigureCanvasTkAgg(fig, master=frame)
             canvas.draw()
-            canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+            canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
 class GraphIsomorphismCheckerApp(ctk.CTk):
     def __init__(self):
@@ -90,7 +91,7 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         self.button_load1.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.button_load2 = ctk.CTkButton(self.frame_controls, width=controls_width, text="Загрузить 2 схему (JSON)", command=self.load_graph2)
         self.button_load2.grid(row=1, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
-        self.combobox_1 = ctk.CTkComboBox(self.frame_controls, width=controls_width, values=["Nauty-Traces", "Weisfeiler-Lehman", "Laszlo-Babai (simplified)"])
+        self.combobox_1 = ctk.CTkComboBox(self.frame_controls, width=controls_width, values=["NetworkX", "Nauty-Traces", "Weisfeiler-Lehman", "Laszlo-Babai (simplified)"])
         self.combobox_1.grid(row=2, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
         self.button_check = ctk.CTkButton(self.frame_controls, width=controls_width, text="Проверить на изоморфизм", command=self.check_isomorphism, fg_color="green")
         self.button_check.grid(row=3, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
@@ -157,7 +158,11 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         
         algorithm = self.combobox_1.get()
         self.log(f"Выбранный алгоритм: {algorithm}", "INFO")
-        if algorithm == "Laszlo-Babai (simplified)":
+        if algorithm == "NetworkX":
+            start_time = timer()
+            is_isomorphic = isomorphism.GraphMatcher(self.graph1, self.graph2)
+            end_time = timer()
+        elif algorithm == "Laszlo-Babai (simplified)":
             start_time = timer()
             G1 = self.convert_to_custom_graph(self.graph1, 'babai')
             G2 = self.convert_to_custom_graph(self.graph2, 'babai')
