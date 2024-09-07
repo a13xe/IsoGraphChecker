@@ -3,22 +3,29 @@ import tkinter as tk
 import networkx as nx
 import customtkinter as ctk
 import matplotlib.pyplot as plt
+
 from timeit import default_timer as timer
 from tkinter import filedialog
 from networkx.algorithms import isomorphism
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-# Local imports
-# from algo.color_refinement import color_refinement_isomorphism
-# from algo.weisfeiler_lehman import weisfeiler_lehman_isomorphism
 
-ctk.set_appearance_mode("Light")
+from algos.vf2 import vf2_isomorphism
+from algos.bliss import bliss_isomorphism
+from algos.color_refinement import color_refinement_isomorphism
+from algos.weisfeiler_lehman import weisfeiler_lehman_isomorphism
+from algos.laszlo_babai_simplified import laszlo_babai_simplified_isomorphism
 
-# High DPI settings fix
-try:
+
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("themes/autumn.json")
+
+
+try: # High DPI settings fix
     from ctypes import windll
     windll.shcore.SetProcessDpiAwareness(1)
 except:
     pass
+
 
 class LogColors:
     SUCCESS = "#28a745"
@@ -26,7 +33,8 @@ class LogColors:
     FAILURE = "#dc3545"
     TEXT = "#000000"
     INFO = "#0a9bff"
-    
+
+
 class GraphDisplay:
     def __init__(self, master):
         self.master = master
@@ -48,6 +56,7 @@ class GraphDisplay:
             canvas = FigureCanvasTkAgg(fig, master=frame)
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+
 
 class GraphIsomorphismCheckerApp(ctk.CTk):
     def __init__(self):
@@ -92,11 +101,11 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         self.button_load1.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.button_load2 = ctk.CTkButton(self.frame_controls, width=controls_width, text="Загрузить 2 схему (JSON)", command=self.load_graph2)
         self.button_load2.grid(row=1, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
-        # self.combobox_1 = ctk.CTkComboBox(self.frame_controls, width=controls_width, values=["VF2", "Color Refinement", "Weisfeiler-Lehman"])
-        # self.combobox_1.grid(row=2, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
+        self.combobox_1 = ctk.CTkComboBox(self.frame_controls, width=controls_width, values=["VF2", "Color Refinement", "Weisfeiler-Lehman", "Bliss", "Laszlo-Babai"])
+        self.combobox_1.grid(row=2, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
         self.button_check = ctk.CTkButton(self.frame_controls, width=controls_width, text="Проверить на изоморфизм", command=self.check_isomorphism, fg_color="green")
         self.button_check.grid(row=3, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
-        self.log_widget = ctk.CTkTextbox(self.frame_controls, width=controls_width, wrap="word", state='disabled', height=log_height + 40) # remove `+ 40` if you are using `combobox_1`
+        self.log_widget = ctk.CTkTextbox(self.frame_controls, width=controls_width, wrap="word", state='disabled', height=log_height)
         self.log_widget.grid(row=4, column=0, padx=(10,10), pady=(0,10), sticky="nsew")
         self.log_widget.grid_propagate(False)
         self.button_clear_log = ctk.CTkButton(self.frame_controls, width=controls_width, text="Очистить лог", command=self.clear_log)
@@ -161,23 +170,31 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         is_isomorphic = isomorphism.GraphMatcher(self.graph1, self.graph2)
         end_time = timer()
         
-        # algorithm = self.combobox_1.get()
-        # self.log(f"Выбранный алгоритм: {algorithm}", "INFO")
-        # if algorithm == "VF2":
-        #     start_time = timer()
-        #     is_isomorphic = isomorphism.GraphMatcher(self.graph1, self.graph2)
-        #     end_time = timer()
-        # elif algorithm == "Color Refinement":
-        #     start_time = timer()
-        #     is_isomorphic = color_refinement_isomorphism(self.graph1, self.graph2)
-        #     end_time = timer()
-        # elif algorithm == "Weisfeiler-Lehman":
-        #     start_time = timer()
-        #     is_isomorphic = weisfeiler_lehman_isomorphism(self.graph1, self.graph2)
-        #     end_time = timer()
-        # else:
-        #     self.log("Пожалуйста, выберите алгоритм из выпадающего списка!", "MESSAGE")
-        #     return
+        algorithm = self.combobox_1.get()
+        self.log(f"Выбранный алгоритм: {algorithm}", "INFO")
+        if algorithm == "VF2":
+            start_time = timer()
+            is_isomorphic = vf2_isomorphism(self.graph1, self.graph2)
+            end_time = timer()
+        elif algorithm == "Color Refinement":
+            start_time = timer()
+            is_isomorphic = color_refinement_isomorphism(self.graph1, self.graph2)
+            end_time = timer()
+        elif algorithm == "Weisfeiler-Lehman":
+            start_time = timer()
+            is_isomorphic = weisfeiler_lehman_isomorphism(self.graph1, self.graph2)
+            end_time = timer()
+        elif algorithm == "Bliss":
+            start_time = timer()
+            is_isomorphic = bliss_isomorphism(self.graph1, self.graph2)
+            end_time = timer()
+        elif algorithm == "Laszlo-Babai":
+            start_time = timer()
+            is_isomorphic = laszlo_babai_simplified_isomorphism(self.graph1, self.graph2)
+            end_time = timer()
+        else:
+            self.log("Пожалуйста, выберите алгоритм из выпадающего списка!", "MESSAGE")
+            return
 
         elapsed_time = end_time - start_time
         self.log(f"Время выполнения: {elapsed_time:.6f} секунд", "INFO")
@@ -204,9 +221,10 @@ class GraphIsomorphismCheckerApp(ctk.CTk):
         self.after_callbacks.clear()
 
     def destroy(self):
-        self.cancel_after_callbacks()   # Cancel all scheduled tasks
-        self.quit()                     # Stops the mainloop
-        super().destroy()               # Destroys the window and its children
+        self.cancel_after_callbacks() # Cancel all scheduled tasks
+        self.quit() # Stops the mainloop
+        super().destroy() # Destroys the window and its children
+
 
 if __name__ == "__main__":
     app = GraphIsomorphismCheckerApp()
